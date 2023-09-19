@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const Cart = require('./cart')
 
 const p = path.join(
   path.dirname(require.main.filename),
@@ -10,15 +11,16 @@ const p = path.join(
 const getProductsFromFile = cb => {
   fs.readFile(p, (err, fileContent) => {
     if (err) {
-      cb([]);
+      return cb([]);
     } else {
-      cb(JSON.parse(fileContent));
+      return cb(JSON.parse(fileContent));
     }
   });
 };
 
 module.exports = class Product {
-  constructor(title, imageUrl, description, price) {
+  constructor(id , title, imageUrl, description, price) {
+    this.id = id;
     this.title = title;
     this.imageUrl = imageUrl;
     this.description = description;
@@ -26,12 +28,31 @@ module.exports = class Product {
   }
 
   save() {
-    this.id = Math.random().toString()
+    
     getProductsFromFile(products => {
-      products.push(this);
-      fs.writeFile(p, JSON.stringify(products), err => {
-        console.log(err);
-      });
+      console.log(this.id !== null)
+      if(this.id !== null){
+        const updatedProducts = [...products];
+        const index = products.findIndex(p => p.id === this.id)
+        console.log(index)
+        if(index != -1){
+          updatedProducts[index] = this;
+          fs.writeFile(p , JSON.stringify(updatedProducts) , (err)=>{
+            if(err){
+              console.log(err)
+            }
+          })
+        }
+      }else{
+        this.id = Math.random().toString()
+        products.push(this);
+        fs.writeFile(p, JSON.stringify(products), err => {
+          console.log(err);
+        });
+      
+      
+      }
+
     });
   }
 
@@ -44,4 +65,22 @@ module.exports = class Product {
       cb(product)
     })
   }
+  static deleteProduct(id){
+     getProductsFromFile(async(products)=>{
+
+      const index = products.findIndex(p => p.id === id)
+      let price;
+      if(index !== -1){
+        const updatedProducts = [...products];
+        price = updatedProducts[index].price
+        updatedProducts.splice(index ,1);
+        fs.writeFile(p , JSON.stringify(updatedProducts) , (err)=>{
+          if(err)
+            console.log(err)
+        })
+        await Cart.removeProduct(id , price)
+      }
+    })
+
 };
+}

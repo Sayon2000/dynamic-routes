@@ -31,4 +31,30 @@ module.exports = class Cart{
 
         })
     }
+    static removeProduct(id , price){
+       return new Promise((resolve , reject)=>{
+        fs.readFile(fileName , (err , data)=>{
+            if(!err)
+                {
+                let cart = JSON.parse(data);
+                const index = cart.product.findIndex(p => p.id === id);
+                if(index !== -1){
+                    const existingProduct = cart.product[index];
+                    
+                    cart.totalPrice -= (price * existingProduct.qty)
+                    cart.product = [...cart.product]
+                    cart.product.splice(index ,1)
+                    // cart.product = updatedCart;
+                    fs.writeFile(fileName , JSON.stringify(cart) , (err)=>{
+                        if(err)
+                            console.log(err)
+                    })
+                    resolve({success:true})
+                  
+                }
+            }else
+                reject("index not found")
+        })
+       } )
+    }
 }
