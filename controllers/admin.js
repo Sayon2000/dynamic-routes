@@ -17,8 +17,8 @@ exports.getEditProduct = (req, res, next) => {
   if(!editMode){
     return res.redirect('/')
   }
-
-  Product.findByPk(id).then((product) =>{
+  req.user.getProducts({where : {id : id }})
+  .then((product) =>{
     if(!product)
       return res.redirect('/')
     
@@ -29,7 +29,7 @@ exports.getEditProduct = (req, res, next) => {
       formsCSS: true,
       productCSS: true,
       activeAddProduct: true,
-      product : product
+      product : product[0]
     });
   })
 
@@ -41,7 +41,7 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const description = req.body.description;
   const product = new Product(null , title, imageUrl, description, price);
-  Product.create({
+  req.user.createProduct({
     title : title,
     price : price,
     imageUrl : imageUrl,
