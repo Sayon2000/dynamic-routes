@@ -11,6 +11,8 @@ const sequelize = require('./util/db')
 
 const Product = require('./models/product')
 const User = require('./models/user')
+const Cart = require('./models/cart')
+const cartItem = require('./models/cart-item')
 
 
 app.set('view engine', 'ejs');
@@ -40,8 +42,17 @@ app.use(errorController.get404);
 Product.belongsTo(User , {constraints : true , onDelete : 'CASCADE'})
 User.hasMany(Product)
 
+User.hasOne(Cart);
+// Cart.belongsTo(User);
 
-sequelize.sync().then(()=>{
+Cart.belongsToMany(Product , {through : cartItem})
+Product.belongsToMany(Cart , {through : cartItem})
+
+
+sequelize
+.sync()
+// .sync({force : true})
+.then(()=>{
     return User.findByPk(1);
     
 })
@@ -51,7 +62,11 @@ sequelize.sync().then(()=>{
     return user
 })
 .then((user)=>{
+    return user.createCart()
 
+    
+})
+.then(()=>{
     app.listen(3000);
 })
 .catch((e)=>{
